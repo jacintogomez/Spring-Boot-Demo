@@ -9,11 +9,17 @@ import org.springframework.stereotype.Service
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.jdbc.core.query
+import org.springframework.web.bind.annotation.*
 import java.util.UUID
 
 @Service
 class MessageService(val db: JdbcTemplate) {
     fun findMessages(): List<Message> = db.query("select * from messages") { response, _ ->
+        Message(response.getString("id"), response.getString("text"))
+    }
+
+    fun findMessageById(id: String): List<Message> = db.query("select * from messages where id = ?", id) { response, _ ->
         Message(response.getString("id"), response.getString("text"))
     }
 
@@ -37,6 +43,10 @@ fun main(args: Array<String>) {
 class MessageController(val service: MessageService) {
     @GetMapping("/")
     fun index(): List<Message> = service.findMessages()
+
+    @GetMapping("/{id}")
+    fun index(@PathVariable id: String): List<Message> =
+        service.findMessageById(id)
 
     @PostMapping("/")
     fun post(@RequestBody message: Message) {
